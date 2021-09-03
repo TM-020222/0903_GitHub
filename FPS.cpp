@@ -1,9 +1,10 @@
 //FPSのソースファイル
-#include"FPS.h"
-#include"game.h"
+
+//ヘッダファイル読み込み
+#include "FPS.h"
 
 //グローバル変数
-FPS fps;
+FPS fps;	//FPSの管理
 
 //関数
 
@@ -14,24 +15,28 @@ FPS fps;
 VOID FPSUpdate(VOID)
 {
 	//一番最初の処理
-	if (fps.IsInitFlg == FALSE)
+	if (FALSE == fps.IsInitFlg)
 	{
 		//測定開始時刻をマイクロ秒単位で取得
-		fps.StartTime = GetNowHiPerformanceCount();		//windowsが起動してから経過した時間(マイクロ秒)
-
-		fps.IsInitFlg = TRUE;	//フラグを建てる
+		fps.StartTime = GetNowHiPerformanceCount();	//Windowsが起動してから経過した時間(マイクロ秒)
 	}
 
 	//現在の時刻をマイクロ秒単位で取得
 	fps.NowTime = GetNowHiPerformanceCount();
 
+	//一番最初だけ
+	if (FALSE == fps.IsInitFlg) { fps.OldTime = fps.NowTime; }	//以前の時間 = 現在の時間
+
 	//前回取得した時間からの経過時間を秒(小数)に変換してからセット
-	fps.DeltaTime = (fps.NowTime - fps.OldTime) / 1000000.0f;	//1,000,000
+	fps.DeltaTime = (fps.NowTime - fps.OldTime) / 1000000.0f;
 
 	//今回取得した時間を保存
 	fps.OldTime = fps.NowTime;
 
-	//1フレーム目～FPS設定値までは、カウントアップ
+	//一番最初だけフラグON
+	if (FALSE == fps.IsInitFlg) { fps.IsInitFlg = TRUE; }
+
+	//１フレーム目～FPS設定値までは、カウントアップ
 	if (fps.Count < fps.SampleRate)
 	{
 		//カウンタを増やす
@@ -40,17 +45,23 @@ VOID FPSUpdate(VOID)
 	else
 	{
 		//FPS設定値のフレームで、平均FPSを計算
-		
+
 		//現在の時刻から、0フレーム目の時間を引き、FPSの数値で割る
 		//現在の平均FPS値が出る
-		fps.DrawValue = 1000000.0f / ((fps.NowTime - fps.StartTime) / (float)fps.SampleRate);
+		fps.DrawValue = 1000000.f / ((fps.NowTime - fps.StartTime) / (float)fps.SampleRate);
 
 		//測定開始時刻をマイクロ秒単位で取得
-		fps.StartTime = GetNowHiPerformanceCount();		//windowsが起動してから経過した時間(マイクロ秒)
+		fps.StartTime = GetNowHiPerformanceCount();	//Windowsが起動してから経過した時間(マイクロ秒)
 
 		//カウンタ初期化
 		fps.Count = 1;
 	}
+
+	//ゲーム内時間カウントアップ
+	fps.GameTime += fps.DeltaTime;
+
+	//現在日付時刻を取得
+	GetDateTime(&fps.NowDataTime);
 
 	return;
 }
@@ -64,7 +75,7 @@ VOID FPSDraw(VOID)
 	if (GAME_DEBUG == TRUE)
 	{
 		//文字列を描画
-		DrawFormatString(0, GAME_HEIGHT - 20, GetColor(0, 255, 0), "FPS:%.1f", fps.DrawValue);
+		DrawFormatString(0, GAME_HEIGHT - 20, GetColor(0, 0, 0), "FPS:%.1f", fps.DrawValue);
 	}
 
 	return;
@@ -76,11 +87,11 @@ VOID FPSDraw(VOID)
 /// <param name=""></param>
 VOID FPSWait(VOID)
 {
-	//現在の時刻 - 最初の時刻で、現在かかっている時刻を取得する
+	//現在の時刻-最初の時刻で、現在かかっている時刻を取得する
 	LONGLONG resultTime = fps.NowTime - fps.StartTime;
 
-	//待つべきミリ秒数(1秒 / FPS値 * 現在のフレーム数)から、現在かかっている時刻を引く
-	LONGLONG waitTime = 1000000.0f / fps.Value * fps.Count - resultTime;
+	//待つべきミリ秒数　(1秒/FPS値 * 現在のフレーム数)から、現在かかっている時刻を引く
+	int waitTime = 1000000.0f / fps.Value * fps.Count - resultTime;
 
 	//マイクロ秒からミリ秒に変換
 	waitTime /= 1000.0f;
@@ -88,17 +99,17 @@ VOID FPSWait(VOID)
 	//処理が早かったら、処理を待つ
 	if (waitTime > 0)
 	{
-		WaitTimer(waitTime);	//因数ミリ秒待つ
+		WaitTimer(waitTime);	//引数ミリ秒待つ
 	}
 
-	//垂直同期をOFFにしているか?
+	//垂直同期をOFFにしているか？
 	if (GetWaitVSyncFlag() == FALSE)
 	{
 		//FPS最大値ではないとき
 		if (fps.Value < GAME_FPS_MAX)
 		{
-			//1秒毎のFPS値よりも、待つ時間が小さいときは、もっとFPS値を上げてもいい
-			//待つ時間 10ミリ <= 1秒 / 60FPS = 16.6666ミリ、もう少し早くできる
+			//１秒毎のFPS値よりも、待つ時間が小さいときは、もっとFPS値を上げても良い
+			//待つ時間 10ミリ　<= 1秒/60FPS = 16.6666ミリ　もう少し早くできる
 			if (waitTime > 0
 				&& waitTime <= 1000.0f / fps.Value)
 			{
@@ -115,4 +126,24 @@ VOID FPSWait(VOID)
 			}
 		}
 	}
+
+	return;
+}
+
+/// <summary>
+/// ゲーム内時間のリセット
+/// </summary>
+VOID ResetGameTime(VOID)
+{
+	fps.GameTime = 0;
+
+	return;
+}
+
+/// <summary>
+/// ゲーム内時間を取得
+/// </summary>
+float GetGameTime(VOID)
+{
+	return fps.GameTime;
 }
