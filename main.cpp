@@ -4,6 +4,7 @@
 #include "FPS.h"		//FPSの処理
 #include "mouse.h"		//マウスの処理
 #include "shape.h"		//図形の処理
+#include "font.h"		//フォントの処理
 
 //独自のマクロ定義
 
@@ -43,9 +44,15 @@ int fadeInCntInit = fadeTimeMax;	//初期値
 int fadeInCnt = fadeInCntInit;		//フェードアウトのカウンタ
 int fadeInCntMax = fadeTimeMax;		//フェードアウトのカウンタMAX
 //★★★ゲーム共通のグローバル変数★★★
+float GameTimeLimit=0;
+const float GameTimeLimitMax=30;
 
 
 //独自のグローバル変数
+
+int CharaWalkTime = 0;
+const int CharaWalkTimeMax = 3;
+
 
 
 //★★★ゲーム共通のプロトタイプ宣言★★★
@@ -97,6 +104,7 @@ DIVIMAGE samplePlayerImg;
 MUKI muki = muki_shita;		//サンプル向き
 
 AUDIO sampleBGM;
+AUDIO playBGM;
 
 // プログラムは WinMain から始まります
 int WINAPI WinMain(
@@ -128,6 +136,11 @@ int WINAPI WinMain(
 
 	//最初のシーンは、タイトル画面から
 	GameScene = GAME_SCENE_TITLE;
+
+	//フォント追加
+	if (FontAdd() == FALSE) { return FALSE; }
+
+
 
 	//ゲーム読み込み
 	if (!GameLoad())
@@ -207,6 +220,9 @@ int WINAPI WinMain(
 		ScreenFlip();	//ダブルバッファリングした画面を描画
 	}
 
+	//フォント削除
+	FontRemove();
+
 	//データ削除
 	GameDelete();
 
@@ -229,10 +245,16 @@ BOOL GameLoad(VOID)
 	if (LoadImageDivMem(&sampleDivImg, ".\\Image\\baku1.png", 8, 2) == FALSE) { return FALSE; }
 
 	//サンプル分割画像を読み込み
-	if (LoadImageDivMem(&samplePlayerImg, ".\\Image\\charachip.png", 3, 4) == FALSE) { return FALSE; }
+	if (LoadImageDivMem(&samplePlayerImg, ".\\Image\\charachip1.png", 4, 4) == FALSE) { return FALSE; }
 
 	//サンプルBGMを読み込み
 	if (LoadAudio(&sampleBGM, ".\\Audio\\ブリキのPARADE.mp3", 128, DX_PLAYTYPE_LOOP) == FALSE) { return FALSE; }
+	
+	//プレイBGMを読み込み
+	if (LoadAudio(&playBGM, ".\\Audio\\秋空は遥か遠く.mp3", 128, DX_PLAYTYPE_LOOP) == FALSE) { return FALSE; }
+
+	//フォントを作成
+	if (FontCreate() == FALSE) { return FALSE; }
 
 	return TRUE;	//全て読み込みた！
 }
@@ -253,6 +275,11 @@ VOID GameDelete(VOID)
 
 	//サンプル音楽を削除
 	DeleteMusicMem(sampleBGM.handle);
+	//プレイ音楽を削除
+	DeleteMusicMem(playBGM.handle);
+
+	//フォントデータを削除
+	FontDelete();
 
 	return;
 }
@@ -263,6 +290,8 @@ VOID GameDelete(VOID)
 /// <param name=""></param>
 VOID GameInit(VOID)
 {
+	GameTimeLimit = 0;
+	CharaWalkTime = 0;
 
 	//ゲーム内時間リセット
 	ResetGameTime();
@@ -304,6 +333,9 @@ VOID TitleProc(VOID)
 		//シーン切り替え
 		//次のシーンの初期化をここで行うと楽
 
+		//音楽を止める
+		StopAudio(&sampleBGM);
+
 		//ゲームの初期化
 		GameInit();
 
@@ -314,6 +346,9 @@ VOID TitleProc(VOID)
 	}
 
 	PlayAudio(sampleBGM);	//BGMを鳴らす
+
+	//残り時間
+	GameTimeLimit = GameTimeLimitMax - GetGameTime();
 
 	//プレイヤーの動作サンプル
 	{
@@ -345,8 +380,20 @@ VOID TitleDraw(VOID)
 	//ゲーム内時間
 	DrawFormatString(500, 50, GetColor(0, 0, 0), "TIME:%3.2f", GetGameTime());
 
+	//ゲーム内時間
+	DrawFormatString(500, 30, GetColor(0, 0, 0), "残り:%3.2f", GameTimeLimit);
+
 	//現在の日付と時刻
 	DrawFormatString(500, 70, GetColor(0, 0, 0), "DATE:%4d/%2d/%2d %2d:%2d:%2d", fps.NowDataTime.Year, fps.NowDataTime.Mon, fps.NowDataTime.Day, fps.NowDataTime.Hour, fps.NowDataTime.Min, fps.NowDataTime.Sec);
+
+	//フォントのサンプル
+	DrawStringToHandle(100, 100, "MS ゴシックだよ", GetColor(0, 0, 0), sampleFont1.handle);
+	
+	//フォントのサンプル
+	DrawStringToHandle(100, 150, "昔々ふぉんとだよ", GetColor(0, 0, 0), sampleFont3.handle);
+
+	//数値を出したいとき
+	DrawFormatStringToHandle(200, 200, GetColor(0, 0, 0), sampleFont2.handle, "残り:%3.2f",GameTimeLimit);
 
 	DrawString(0, 0, "タイトル画面", GetColor(0, 0, 0));
 	return;
@@ -370,10 +417,15 @@ VOID PlayProc(VOID)
 {
 	if (KeyClick(KEY_INPUT_RETURN) == TRUE)
 	{
+		//音楽を止める
+		StopAudio(&playBGM);
+
 		//プレイ画面に切り替え
 		ChangeScene(GAME_SCENE_END);
 		return;
 	}
+
+	PlayAudio(playBGM);	//BGMを鳴らす
 
 	return;
 }
@@ -793,46 +845,46 @@ VOID DrawDivImageChara(DIVIMAGE* image)
 			//右向きのとき(画像によって数字が違うので、合わせること！)
 			if (muki == muki_migi)
 			{
-				if (image->nowIndex >= 6 && image->nowIndex < 8)
+				if (image->nowIndex >= 8 && image->nowIndex < 11 )
 				{
 					image->nowIndex++;
 				}
 				else
 				{
-					image->nowIndex = 6;
+					image->nowIndex = 8;
 				}
 			}
 
 			//左向きのとき(画像によって数字が違うので、合わせること！)
 			if (muki == muki_hidari)
 			{
-				if (image->nowIndex >= 3 && image->nowIndex < 5)
+				if (image->nowIndex >= 4 && image->nowIndex < 7)
 				{
 					image->nowIndex++;
 				}
 				else
 				{
-					image->nowIndex = 3;
+					image->nowIndex = 4;
 				}
 			}
 
 			//上向きのとき(画像によって数字が違うので、合わせること！)
 			if (muki == muki_ue)
 			{
-				if (image->nowIndex >= 9 && image->nowIndex < 11)
+				if (image->nowIndex >= 12 && image->nowIndex < 15)
 				{
 					image->nowIndex++;
 				}
 				else
 				{
-					image->nowIndex = 9;
+					image->nowIndex = 12;
 				}
 			}
 
 			//下向きのとき(画像によって数字が違うので、合わせること！)
 			if (muki == muki_shita)
 			{
-				if (image->nowIndex >= 0 && image->nowIndex < 2)
+				if (image->nowIndex >= 0 && image->nowIndex < 3)
 				{
 					image->nowIndex++;
 				}
@@ -845,10 +897,10 @@ VOID DrawDivImageChara(DIVIMAGE* image)
 			//向き無しのときは、直前の向きの真ん中の画像にする(画像に合わせて決めてネ)
 			if (muki == muki_none)
 			{
-				if (image->nowIndex >= 6 && image->nowIndex <= 8) { image->nowIndex = 7; }
-				if (image->nowIndex >= 3 && image->nowIndex <= 5) { image->nowIndex = 4; }
-				if (image->nowIndex >= 9 && image->nowIndex <= 11) { image->nowIndex = 10; }
-				if (image->nowIndex >= 0 && image->nowIndex <= 2) { image->nowIndex = 1; }
+				if (image->nowIndex >= 8 && image->nowIndex <= 11) { image->nowIndex = 8; }
+				if (image->nowIndex >= 4 && image->nowIndex <= 7) { image->nowIndex = 4; }
+				if (image->nowIndex >= 12 && image->nowIndex <= 15) { image->nowIndex = 12; }
+				if (image->nowIndex >= 0 && image->nowIndex <= 3) { image->nowIndex = 0; }
 			}
 
 			image->AnimCnt = 0;	//カウンタ0クリア
