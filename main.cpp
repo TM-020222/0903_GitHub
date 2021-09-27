@@ -260,6 +260,9 @@ BOOL GameLoad(VOID)
 	//サンプル敵データを読み込み
 	if (LoadCSVChara(CSV_PATH_ENEMY, &enemy[0], ENEMY_MAX, TRUE) == FALSE) { return FALSE; }
 
+	//サンプルスコアデータを読み込み
+	if (LoadScoreData(SCORE_DATA_PATH, &score_data, TRUE) == FALSE) { return FALSE; }
+
 	return TRUE;	//全て読み込みた！
 }
 
@@ -332,6 +335,28 @@ VOID Title(VOID)
 /// </summary>
 VOID TitleProc(VOID)
 {
+	//セーブデータ系サンプル
+	{
+		//セーブデータ削除サンプル
+		if (KeyDown(KEY_INPUT_Q)) { DeleteScoreData(); }
+
+		//セーブデータ保存サンプル
+		if (KeyDown(KEY_INPUT_E))
+		{
+			//スコアデータを設定
+			score_data.Score1 = (int)GetGameTime();
+			strcpyDx(score_data.Name1, "Taro");
+			strcpyDx(score_data.Name2, "Jiro");
+			strcpyDx(score_data.Name3, "Saburo");
+
+			//スコアデータの並び替え
+
+			//スコアデータ保存
+			SaveScoreData();
+		}
+	}
+
+
 	if (KeyClick(KEY_INPUT_RETURN) == TRUE)
 	{
 		//シーン切り替え

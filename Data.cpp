@@ -21,7 +21,7 @@ SCORE_DATA score_dataInit =		//スコアデータ
 /// <param name="DataMax">CSVファイルの最大数</param>
 /// <param name="IsHeader">CSVファイルの一行目がヘッダならTRUE</param>
 /// <returns>TRUEは読み込めた/FALSEは失敗した</returns>
-BOOL LoadCSVChara(const char* path, CHARA_DATA* chara, int DataMax, BOOL IsHeader)
+BOOL LoadCSVChara(const char* path, CHARA_DATA* chara, int DataMax, BOOL IsHeader = FALSE)
 {
 	FILE* fp;				//ファイルポインタ
 	char GetChar = '\0';	//取得する文字
@@ -142,6 +142,8 @@ BOOL LoadScoreData(const char* path, SCORE_DATA* score, BOOL IsHeader = FALSE)
 	}
 
 	fclose(fp);	//ファイルを閉じる
+
+	return TRUE;
 }
 
 /// <summary>
@@ -202,9 +204,9 @@ BOOL SaveScoreData(VOID)
 	//スコアデータを書き込み
 	fprintf_s(crefp,
 		"%s,%d,%s,%d,%s,%d",
-		score_dataInit.Name1, score_dataInit.Score1,
-		score_dataInit.Name2, score_dataInit.Score2,
-		score_dataInit.Name3, score_dataInit.Score3
+		score_data.Name1, score_data.Score1,
+		score_data.Name2, score_data.Score2,
+		score_data.Name3, score_data.Score3
 	);
 
 	fclose(crefp);	//スコアデータを閉じる
