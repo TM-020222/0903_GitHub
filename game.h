@@ -69,7 +69,7 @@ struct DIVIMAGE
 	BOOL IsDraw = FALSE;			//描画できるか？
 
 	int AnimCnt = 0;				//アニメーションカウンタ
-	int AnimCntMAX = 2;				//アニメーションカウンタMAX
+	int AnimCntMAX = 8;				//アニメーションカウンタMAX
 	BOOL IsAnimLoop = FALSE;		//アニメーションをループさせるか？
 };
 

@@ -38,6 +38,28 @@
 //データの書式指定子
 #define SCORE_DATA_FORMAT	TEXT("%[^,],%d,%[^,],%d,%[^,],%d")	//スコアデータの書式指定子
 
+//マップチップの画像のファイルパス
+#define IMG_PATH_MAP1				TEXT(".\\map\\mapchip.png")
+
+//マップチップの画像のファイルパス
+#define CSV_PATH_MAP1_SHITA			TEXT(".\\map\\map_sita.csv")
+#define CSV_PATH_MAP1_NAKA			TEXT(".\\map\\map_naka.csv")
+#define CSV_PATH_MAP1_KAGU			TEXT(".\\map\\map_kagu.csv")
+#define CSV_PATH_MAP1_NAKA_ATARI	TEXT(".\\map\\map_naka_atari.csv")
+#define CSV_PATH_MAP1_UE			TEXT(".\\map\\map_ue.csv")
+
+//マップの書式指定子
+#define CSV_MAP_FORMAT		TEXT("%d,")
+
+#define MAP1_YOKO_MAX			20	//マップの横サイズ
+#define MAP1_TATE_MAX			20	//マップの縦サイズ
+
+#define MAP1_YOKO_DIV			60	//マップの横分割数
+#define MAP1_TATE_DIV			60	//マップの縦分割数
+
+#define MAP_MOVE_ID				56	//通れるマップID
+#define MAP_STOP_ID				57	//通れないマップID
+#define MAP_NONE_ID				59	//何もないマップID
 
 //キャラデータ構造体(あくまでシンプル)
 struct CHARA_DATA
@@ -67,6 +89,33 @@ struct SCORE_DATA
 	int Score3;				//スコア3
 };
 
+struct MAP_DATA
+{
+	//CSVデータ(分割画像のID)
+	int CSV_shita[MAP1_TATE_MAX][MAP1_YOKO_MAX];
+	int CSV_naka[MAP1_TATE_MAX][MAP1_YOKO_MAX];
+	int CSV_kagu[MAP1_TATE_MAX][MAP1_YOKO_MAX];
+	int CSV_naka_atari[MAP1_TATE_MAX][MAP1_YOKO_MAX];
+	int CSV_ue[MAP1_TATE_MAX][MAP1_YOKO_MAX];
+
+	//マップのハンドル
+	int handle[MAP1_TATE_DIV * MAP1_YOKO_DIV];
+
+	//マップの場所
+	int x[MAP1_TATE_MAX][MAP1_YOKO_MAX];
+	int y[MAP1_TATE_MAX][MAP1_YOKO_MAX];
+
+	int width;
+	int height;
+
+	int divMax;
+	
+	BOOL IsDraw = FALSE;
+
+	//当たり判定
+	RECT coll[MAP1_TATE_MAX][MAP1_YOKO_MAX];
+};
+
 
 //-外部のグローバル関数-
 extern CHARA_DATA enemy[ENEMY_MAX];		//敵データ
@@ -79,8 +128,22 @@ extern SCORE_DATA score_dataInit;		//スコアデータ初期化用
 extern BOOL LoadCSVChara(const char* path, CHARA_DATA* chara, int DataMax, BOOL IsHeader);
 extern BOOL LoadScoreData(const char* path, SCORE_DATA* score, BOOL IsHeader);
 
+extern BOOL LoadCSVMap(
+	const char* ImgPath,
+	const char* shitaPath,
+	const char* nakaPath,
+	const char* kaguPath,
+	const char* nakaatariPath,
+	const char* uePath,
+	MAP_DATA* map,
+	int divYoko,
+	int divTate);
+
 extern BOOL CreateScoreData(VOID);
 extern BOOL SaveScoreData(VOID);
 extern BOOL DeleteScoreData(VOID);
 extern const char* GetScoreDataPath(VOID);
 extern VOID SetScoreDataPath(const char* path);
+
+extern BOOL CollMap(RECT rect, MAP_DATA map);
+extern VOID DrawMap(MAP_DATA map);
