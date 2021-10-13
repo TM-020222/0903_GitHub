@@ -61,6 +61,10 @@ BOOL GameLoad(VOID);	//データを読込
 VOID GameInit(VOID);	//データの初期化
 VOID GameDelete(VOID);	//データを削除
 
+VOID TitleInit(VOID);
+VOID PlayInit(VOID);
+VOID EndInit(VOID);
+
 VOID Title(VOID);		//タイトル画面
 VOID TitleProc(VOID);	//タイトル画面(処理)
 VOID TitleDraw(VOID);	//タイトル画面(描画)
@@ -108,6 +112,17 @@ AUDIO sampleBGM;
 AUDIO playBGM;
 
 MAP_DATA map1;
+MAP_DATA map2;
+
+//イベントマス
+EVENT event_warp_play;
+
+EVENT event_warp_title;
+
+EVENT event_warp_end;
+
+BOOL warpFlag;
+
 
 // プログラムは WinMain から始まります
 int WINAPI WinMain(
@@ -156,6 +171,7 @@ int WINAPI WinMain(
 
 	//ゲームの初期化
 	GameInit();
+	TitleInit();
 
 	//無限ループ
 	while (1)
@@ -277,6 +293,17 @@ BOOL GameLoad(VOID)
 		MAP1_YOKO_DIV,MAP1_TATE_DIV
 	) == FALSE) {return FALSE; }
 
+	if(LoadCSVMap(
+		IMG_PATH_MAP1,
+		CSV_PATH_MAP2_SHITA,
+		CSV_PATH_MAP2_NAKA,
+		CSV_PATH_MAP2_KAGU,
+		CSV_PATH_MAP2_NAKA_ATARI,
+		CSV_PATH_MAP2_UE,
+		&map2,
+		MAP1_YOKO_DIV,MAP1_TATE_DIV
+	) == FALSE) {return FALSE; }
+
 
 	return TRUE;	//全て読み込みた！
 }
@@ -312,11 +339,68 @@ VOID GameDelete(VOID)
 /// <param name=""></param>
 VOID GameInit(VOID)
 {
+	samplePlayerImg.speed = 2;
+
 	GameTimeLimit = 0;
-	CharaWalkTime = 0;
+	
+	//音楽の音量調整
+	SetVolumeAudio(&sampleBGM, 100);
+	SetVolumeAudio(&playBGM, 100);
 
 	//ゲーム内時間リセット
 	ResetGameTime();
+
+	//イベントがおこるマス
+	/*
+	event_warp_play.x = 17;
+	event_warp_play.y = 0;
+
+	event_warp_play.coll.top = map1.height * event_warp_play.y -1;
+	event_warp_play.coll.left = map1.width * event_warp_play.x -1;
+	event_warp_play.coll.bottom = map1.height * (event_warp_play.y + 1)+1;
+	event_warp_play.coll.right = map1.width * (event_warp_play.x + 1) +1;
+
+
+	event_warp_title.x = 17;
+	event_warp_title.y = 19;
+
+	event_warp_title.coll.top = map1.height * event_warp_title.y -1;
+	event_warp_title.coll.left = map1.width * event_warp_title.x -1;
+	event_warp_title.coll.bottom = map1.height * (event_warp_title.y + 1)+1;
+	event_warp_title.coll.right = map1.width * (event_warp_title.x + 1) +1;
+
+
+	event_warp_end.x = 3;
+	event_warp_end.y = 0;
+
+	event_warp_end.coll.top = map1.height * event_warp_end.y - 1;
+	event_warp_end.coll.left = map1.width * event_warp_end.x - 1;
+	event_warp_end.coll.bottom = map1.height * (event_warp_end.y + 1) + 1;
+	event_warp_end.coll.right = map1.width * (event_warp_end.x + 1) + 1;
+	*/
+
+	CreateEventMass(17, 0, &event_warp_play, map1);
+	CreateEventMass(17, 19, &event_warp_title, map2);
+	CreateEventMass(3, 0, &event_warp_end, map2);
+
+	return;
+}
+
+VOID TitleInit(VOID)
+{
+	
+
+	return;
+}
+
+VOID PlayInit(VOID)
+{
+	
+	return;
+}
+
+VOID EndInit(VOID)
+{
 
 	return;
 }
@@ -350,6 +434,13 @@ VOID Title(VOID)
 /// </summary>
 VOID TitleProc(VOID)
 {
+	//もしイベントを踏んで移動したのなら
+	if (CheckCollRectToRect(samplePlayerImg.coll, event_warp_title.coll) == TRUE && event_warp_title.can == TRUE)
+	{
+		//キャラを上へ
+		samplePlayerImg.y = map2.height * 1 + 2;
+		event_warp_title.can = FALSE;
+	}
 	//セーブデータ系サンプル
 	{
 		//セーブデータ削除サンプル
@@ -392,7 +483,7 @@ VOID TitleProc(VOID)
 	PlayAudio(sampleBGM);	//BGMを鳴らす
 
 	//残り時間
-	GameTimeLimit = GameTimeLimitMax - GetGameTime();
+	//GameTimeLimit = GameTimeLimitMax - GetGameTime();
 
 	//プレイヤーの動作サンプル
 	/*
@@ -410,10 +501,10 @@ VOID TitleProc(VOID)
 	{
 		muki = muki_none;					//最初は向きなし
 		DIVIMAGE dummy = samplePlayerImg;	//当たり判定のダミー
-		if (KeyDown(KEY_INPUT_W)) { muki = muki_ue; dummy.y--; }
-		else if (KeyDown(KEY_INPUT_S)) { muki = muki_shita; dummy.y++; }
-		if (KeyDown(KEY_INPUT_A)) { muki = muki_hidari; dummy.x--; }
-		else if (KeyDown(KEY_INPUT_D)) { muki = muki_migi; dummy.x++; }
+		if (KeyDown(KEY_INPUT_W)) { muki = muki_ue; dummy.y-=samplePlayerImg.speed; }
+		else if (KeyDown(KEY_INPUT_S)) { muki = muki_shita; dummy.y+= samplePlayerImg.speed; }
+		if (KeyDown(KEY_INPUT_A)) { muki = muki_hidari; dummy.x-= samplePlayerImg.speed; }
+		else if (KeyDown(KEY_INPUT_D)) { muki = muki_migi; dummy.x+= samplePlayerImg.speed; }
 
 		CollUpdateDivImage(&dummy);	//当たり判定の更新
 
@@ -421,6 +512,34 @@ VOID TitleProc(VOID)
 		{
 			samplePlayerImg = dummy;	//ダミーの情報を戻す
 		}
+
+		if (samplePlayerImg.y < -20) { samplePlayerImg.y = -20; }
+		if (samplePlayerImg.y > MAP1_TATE_MAX * map1.height - samplePlayerImg.height) 
+		{ samplePlayerImg.y = MAP1_TATE_MAX * map1.height - samplePlayerImg.height; }
+
+		if (samplePlayerImg.x < 0) { samplePlayerImg.x = 0; }
+		if (samplePlayerImg.x > MAP1_YOKO_MAX * map1.width - samplePlayerImg.width) 
+		{ samplePlayerImg.x = MAP1_YOKO_MAX * map1.width - samplePlayerImg.width; }
+
+		CollUpdateDivImage(&samplePlayerImg);	//当たり判定の更新
+
+		//イベントマスに当たっているか
+		if (CheckCollRectToRect(samplePlayerImg.coll, event_warp_play.coll) == TRUE)
+		{
+			//ゲームデータの初期化
+			GameInit();
+			PlayInit();
+
+			//マップ移動のフラグ
+			event_warp_play.can = TRUE;
+
+			//音楽を止める
+			StopAudio(&sampleBGM);
+
+			//プレイ画面に切り替え
+			ChangeScene(GAME_SCENE_PLAY);
+		}
+
 	}
 
 	return;
@@ -432,6 +551,7 @@ VOID TitleProc(VOID)
 VOID TitleDraw(VOID)
 {
 
+	/*
 	DrawImage(sampleImg);				//サンプル画像の描画
 	DrawDivImage(&sampleDivImg);		//サンプル分割画像の描画
 
@@ -457,16 +577,19 @@ VOID TitleDraw(VOID)
 
 	//数値を出したいとき
 	//DrawFormatStringToHandle(200, 200, GetColor(0, 0, 0), sampleFont2.handle, "残り:%3.2f",GameTimeLimit);
-
+	
 	//読み込んだデータを描画
 	for (int i = 0; i < ENEMY_MAX; i++)
 	{
 		DrawFormatString(300, 300 + i * 20, GetColor(0, 0, 0), "%s,%2d,%2d,%2d"
 			, enemy[i].Name, enemy[i].HP, enemy[i].ATK, enemy[i].DEF);
 	}
+	*/
 
 	//マップのサンプル
 	DrawMap(map1);
+
+	DrawBox(event_warp_play.coll.left, event_warp_play.coll.top, event_warp_play.coll.right, event_warp_play.coll.bottom, GetColor(0, 255, 0), FALSE);
 
 	DrawString(0, 0, "タイトル画面", GetColor(0, 0, 0));
 	return;
@@ -488,6 +611,16 @@ VOID Play(VOID)
 /// </summary>
 VOID PlayProc(VOID)
 {
+	//もしイベントを踏んで移動したのなら
+	if (CheckCollRectToRect(samplePlayerImg.coll, event_warp_play.coll) == TRUE && event_warp_play.can ==TRUE)
+	{
+		//キャラを下へ
+		samplePlayerImg.y = map2.height * (MAP1_TATE_MAX - 1) - samplePlayerImg.height - 2;
+		event_warp_play.can = FALSE;
+	}
+
+	PlayAudio(playBGM);	//BGMを鳴らす
+
 	if (KeyClick(KEY_INPUT_RETURN) == TRUE)
 	{
 		//音楽を止める
@@ -498,7 +631,58 @@ VOID PlayProc(VOID)
 		return;
 	}
 
-	PlayAudio(playBGM);	//BGMを鳴らす
+	//マップの当たり判定
+	{
+		muki = muki_none;					//最初は向きなし
+		DIVIMAGE dummy = samplePlayerImg;	//当たり判定のダミー
+		if (KeyDown(KEY_INPUT_W)) { muki = muki_ue; dummy.y-= samplePlayerImg.speed; }
+		else if (KeyDown(KEY_INPUT_S)) { muki = muki_shita; dummy.y+= samplePlayerImg.speed; }
+		if (KeyDown(KEY_INPUT_A)) { muki = muki_hidari; dummy.x-= samplePlayerImg.speed; }
+		else if (KeyDown(KEY_INPUT_D)) { muki = muki_migi; dummy.x+= samplePlayerImg.speed; }
+
+		CollUpdateDivImage(&dummy);	//当たり判定の更新
+
+		if (CollMap(dummy.coll, map2) == FALSE)
+		{
+			samplePlayerImg = dummy;	//ダミーの情報を戻す
+		}
+
+		//イベントマスに当たっているか
+		if (CheckCollRectToRect(samplePlayerImg.coll, event_warp_title.coll) == TRUE)
+		{
+			//ゲームデータの初期化
+			GameInit();
+			TitleInit();
+
+			//マップ移動のフラグ
+			event_warp_title.can = TRUE;
+
+			//音楽を止める
+			StopAudio(&playBGM);
+
+			//プレイ画面に切り替え
+			ChangeScene(GAME_SCENE_TITLE);
+		}
+
+		if (CheckCollRectToRect(samplePlayerImg.coll, event_warp_end.coll) == TRUE)
+		{
+			//ゲームデータの初期化
+			GameInit();
+			EndInit();
+
+			//マップ移動のフラグ
+			//event_warp_end.can = TRUE;
+
+			//音楽を止める
+			StopAudio(&playBGM);
+
+			//プレイ画面に切り替え
+			ChangeScene(GAME_SCENE_END);
+		}
+
+
+
+	}
 
 	return;
 }
@@ -508,6 +692,11 @@ VOID PlayProc(VOID)
 /// </summary>
 VOID PlayDraw(VOID)
 {
+	//マップのサンプル
+	DrawMap(map2);
+
+	DrawBox(event_warp_title.coll.left, event_warp_title.coll.top, event_warp_title.coll.right, event_warp_title.coll.bottom, GetColor(0, 255, 0), FALSE);
+	DrawBox(event_warp_end.coll.left, event_warp_end.coll.top, event_warp_end.coll.right, event_warp_end.coll.bottom, GetColor(0, 255, 0), FALSE);
 
 	DrawString(0, 0, "プレイ画面", GetColor(0, 0, 0));
 	return;
@@ -674,10 +863,10 @@ VOID CollUpdateImage(IMAGE* img)
 /// <param name="img">画像構造体のポインタ</param>
 VOID CollUpdateDivImage(DIVIMAGE* div)
 {
-	div->coll.left = div->x;
-	div->coll.top = div->y;
+	div->coll.left = div->x + 5;
+	div->coll.top = div->y + 20;
 
-	div->coll.right = div->x + div->width;
+	div->coll.right = div->x + div->width - 5;
 	div->coll.bottom = div->y + div->height;
 
 	return;

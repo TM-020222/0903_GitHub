@@ -675,3 +675,14 @@ VOID DrawMap(MAP_DATA map)
 
 	return;
 }
+
+extern VOID CreateEventMass(int x, int y, EVENT* events, MAP_DATA map)
+{
+	events->x = x;
+	events->y = y;
+
+	events->coll.top = map.height * events->y - 1;
+	events->coll.left = map.width * events->x - 1;
+	events->coll.bottom = map.height * (events->y + 1) + 1;
+	events->coll.right = map.width * (events->x + 1) + 1;
+}

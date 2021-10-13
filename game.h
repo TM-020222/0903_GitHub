@@ -71,6 +71,8 @@ struct DIVIMAGE
 	int AnimCnt = 0;				//アニメーションカウンタ
 	int AnimCntMAX = 8;				//アニメーションカウンタMAX
 	BOOL IsAnimLoop = FALSE;		//アニメーションをループさせるか？
+
+	int speed = 0;					//速度
 };
 
 //動画の構造体
@@ -95,6 +97,17 @@ struct AUDIO
 
 	int Volume = -1;		//ボリューム（MIN 0 ～ 255 MAX）
 	int playType = -1;		//BGM or SE
+};
+
+//イベントの構造体
+struct EVENT
+{
+	int x = -1;				//X座標
+	int y = -1;				//Y座標
+
+	BOOL can = FALSE;				//実行できるか
+
+	RECT coll;				//当たり判定
 };
 
 //########## 外部のグローバル変数 ##########

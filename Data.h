@@ -48,6 +48,12 @@
 #define CSV_PATH_MAP1_NAKA_ATARI	TEXT(".\\map\\map_naka_atari.csv")
 #define CSV_PATH_MAP1_UE			TEXT(".\\map\\map_ue.csv")
 
+#define CSV_PATH_MAP2_SHITA			TEXT(".\\map\\playmap_sita.csv")
+#define CSV_PATH_MAP2_NAKA			TEXT(".\\map\\playmap_naka.csv")
+#define CSV_PATH_MAP2_KAGU			TEXT(".\\map\\playmap_kagu.csv")
+#define CSV_PATH_MAP2_NAKA_ATARI	TEXT(".\\map\\playmap_naka_atari.csv")
+#define CSV_PATH_MAP2_UE			TEXT(".\\map\\playmap_ue.csv")
+
 //マップの書式指定子
 #define CSV_MAP_FORMAT		TEXT("%d,")
 
@@ -147,3 +153,4 @@ extern VOID SetScoreDataPath(const char* path);
 
 extern BOOL CollMap(RECT rect, MAP_DATA map);
 extern VOID DrawMap(MAP_DATA map);
+extern VOID CreateEventMass(int x, int y, EVENT* events, MAP_DATA map);
