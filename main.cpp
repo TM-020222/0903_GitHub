@@ -121,7 +121,7 @@ EVENT event_warp_title;
 
 EVENT event_warp_end;
 
-BOOL warpFlag;
+EVENT event_text_home;
 
 
 // プログラムは WinMain から始まります
@@ -384,6 +384,8 @@ VOID GameInit(VOID)
 	CreateEventMass(17, 19, &event_warp_title, map2);
 	CreateEventMass(3, 0, &event_warp_end, map2);
 
+	CreateEventMultiMass(6, 7, 13, 8, &event_text_home, map1);
+
 	return;
 }
 
@@ -395,6 +397,9 @@ VOID TitleInit(VOID)
 		samplePlayerImg.x = 0;
 		samplePlayerImg.y = 0;
 	}
+
+	event_text_home.Cnt = 0;
+	event_text_home.CntMax = 60;
 
 	return;
 }
@@ -546,6 +551,16 @@ VOID TitleProc(VOID)
 			ChangeScene(GAME_SCENE_PLAY);
 		}
 
+		if (CheckCollRectToRect(samplePlayerImg.coll, event_text_home.coll) == TRUE && KeyDown(KEY_INPUT_Z) && event_text_home.Cnt < event_text_home.CntMax)
+		{
+			event_text_home.can = TRUE;
+			event_text_home.Cnt++;
+		}
+		else
+		{
+			event_text_home.can = FALSE;
+			event_text_home.Cnt = 0;
+		}
 	}
 
 	return;
@@ -596,6 +611,12 @@ VOID TitleDraw(VOID)
 	DrawMap(map1);
 
 	DrawBox(event_warp_play.coll.left, event_warp_play.coll.top, event_warp_play.coll.right, event_warp_play.coll.bottom, GetColor(0, 255, 0), FALSE);
+	DrawBox(event_text_home.coll.left, event_text_home.coll.top, event_text_home.coll.right, event_text_home.coll.bottom, GetColor(0, 255, 0), FALSE);
+
+	if (event_text_home.can == TRUE)
+	{
+		DrawStringToHandle(100, 100, "MS ゴシックだよ", GetColor(0, 0, 0), sampleFont1.handle);
+	}
 
 	DrawString(0, 0, "タイトル画面", GetColor(0, 0, 0));
 	return;

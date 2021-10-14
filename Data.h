@@ -154,3 +154,4 @@ extern VOID SetScoreDataPath(const char* path);
 extern BOOL CollMap(RECT rect, MAP_DATA map);
 extern VOID DrawMap(MAP_DATA map);
 extern VOID CreateEventMass(int x, int y, EVENT* events, MAP_DATA map);
+extern VOID CreateEventMultiMass(int x1, int y1, int x2, int y2, EVENT* events, MAP_DATA map);

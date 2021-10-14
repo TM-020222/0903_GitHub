@@ -105,6 +105,9 @@ struct EVENT
 	int x = -1;				//XÀ•W
 	int y = -1;				//YÀ•W
 
+	int Cnt = -1;
+	int CntMax = -1;
+
 	BOOL can = FALSE;				//Às‚Å‚«‚é‚©
 
 	RECT coll;				//“–‚½‚è”»’è
