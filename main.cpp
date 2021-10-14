@@ -339,6 +339,7 @@ VOID GameDelete(VOID)
 /// <param name=""></param>
 VOID GameInit(VOID)
 {
+	//移動速度
 	samplePlayerImg.speed = 2;
 
 	GameTimeLimit = 0;
@@ -388,7 +389,12 @@ VOID GameInit(VOID)
 
 VOID TitleInit(VOID)
 {
-	
+	if (event_warp_title.can == FALSE)
+	{
+		//プレイヤーの位置の初期化
+		samplePlayerImg.x = 0;
+		samplePlayerImg.y = 0;
+	}
 
 	return;
 }
@@ -679,9 +685,6 @@ VOID PlayProc(VOID)
 			//プレイ画面に切り替え
 			ChangeScene(GAME_SCENE_END);
 		}
-
-
-
 	}
 
 	return;
@@ -1099,11 +1102,15 @@ VOID DrawDivImageChara(DIVIMAGE* image)
 	{
 		DrawGraph(image->x, image->y, image->handle[image->nowIndex], TRUE);
 
+		if (muki == muki_none)
+		{
+			image->AnimCnt = image->AnimCntMAX - 1;
+		}
+
 		//アニメーションのカウントアップ
 		if (image->AnimCnt < image->AnimCntMAX) { image->AnimCnt++; }
 		else
 		{
-
 			//右向きのとき(画像によって数字が違うので、合わせること！)
 			if (muki == muki_migi)
 			{
@@ -1156,16 +1163,16 @@ VOID DrawDivImageChara(DIVIMAGE* image)
 				}
 			}
 
-			//向き無しのときは、直前の向きの真ん中の画像にする(画像に合わせて決めてネ)
-			if (muki == muki_none)
-			{
-				if (image->nowIndex >= 8 && image->nowIndex <= 11) { image->nowIndex = 8; }
-				if (image->nowIndex >= 4 && image->nowIndex <= 7) { image->nowIndex = 4; }
-				if (image->nowIndex >= 12 && image->nowIndex <= 15) { image->nowIndex = 12; }
-				if (image->nowIndex >= 0 && image->nowIndex <= 3) { image->nowIndex = 0; }
-			}
-
 			image->AnimCnt = 0;	//カウンタ0クリア
+		}
+
+		//向き無しのときは、直前の向きの真ん中の画像にする(画像に合わせて決めてネ)
+		if (muki == muki_none)
+		{
+			if (image->nowIndex >= 8 && image->nowIndex <= 11) { image->nowIndex = 8; }
+			if (image->nowIndex >= 4 && image->nowIndex <= 7) { image->nowIndex = 4; }
+			if (image->nowIndex >= 12 && image->nowIndex <= 15) { image->nowIndex = 12; }
+			if (image->nowIndex >= 0 && image->nowIndex <= 3) { image->nowIndex = 0; }
 		}
 	}
 
