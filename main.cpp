@@ -551,16 +551,15 @@ VOID TitleProc(VOID)
 			ChangeScene(GAME_SCENE_PLAY);
 		}
 
-		if (CheckCollRectToRect(samplePlayerImg.coll, event_text_home.coll) == TRUE && KeyDown(KEY_INPUT_Z) && event_text_home.Cnt < event_text_home.CntMax)
+		//–¢Š®
+		/*if (CheckCollRectToRect(samplePlayerImg.coll, event_text_home.coll) == TRUE && KeyDown(KEY_INPUT_Z))
 		{
 			event_text_home.can = TRUE;
-			event_text_home.Cnt++;
 		}
 		else
 		{
 			event_text_home.can = FALSE;
-			event_text_home.Cnt = 0;
-		}
+		}*/
 	}
 
 	return;
